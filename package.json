@@ -20,8 +20,6 @@
   "dependencies": {
     "@dbml/connector": "^3.9.5",
     "@dbml/core": "^3.9.5",
-    "@ymmy833y/dbml-relationalizer": "file:",
-    "@Ymmy833y/dbml-relationalizer": "file:",
     "commander": "^13.0.0",
     "dotenv": "^16.4.7",
     "winston": "^3.17.0",

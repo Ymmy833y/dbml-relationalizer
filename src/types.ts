@@ -29,7 +29,6 @@ type DatabaseSchemaMap = Record<string, TableSchema>;
 interface CommandOptions {
   outFile?: string;
   inputFile?: string;
-  version?: boolean;
   verbose?: boolean;
 }
 

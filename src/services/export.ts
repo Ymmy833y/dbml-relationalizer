@@ -4,23 +4,9 @@ import { importer } from '@dbml/core';
 import { Relation, DatabaseSchemaJson } from '../types.js';
 import logger from '../utils/logger.js';
 
-function escapeIdentifier(identifier: string): string {
-  return identifier.replace(/"/g, '""');
-}
-
-function generateEscapeRelation(relation: Relation) {
-  return {
-    parentTable: escapeIdentifier(relation.parentTable),
-    parentColumn: escapeIdentifier(relation.parentColumn),
-    childTable: escapeIdentifier(relation.childTable),
-    childColumn: escapeIdentifier(relation.childColumn),
-  };
-}
-
 function generateRef(relations: Relation[]): string {
   return relations
-    .map(relations => {
-      const { parentTable, parentColumn, childTable, childColumn } = generateEscapeRelation(relations);
+    .map(({ parentTable, parentColumn, childTable, childColumn }) => {
       const identifier = `"infer_fk_${parentTable}_${childTable}_${parentColumn}"`;
       const parentRef = `"${parentTable}"."${parentColumn}"`;
       const childRef = `"${childTable}"."${childColumn}"`;
