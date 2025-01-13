@@ -1,0 +1,10 @@
+relations:
+  - parentQualifiedColumn: "user.id"
+    childQualifiedColumns:
+      - "%.user_id"
+  - parentQualifiedColumn: "item.item_id"
+    childQualifiedColumns:
+      - "%.item_id"
+      - "%.items_id"
+    ignoreChildQualifiedColumns:
+      - "items.%"
