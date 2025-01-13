@@ -15,7 +15,7 @@ jest.mock('@dbml/core', () => ({
 }));
 
 describe('generate', () => {
-  const mockSchemaJson: DatabaseSchemaJson = { 
+  const mockSchemaJson: DatabaseSchemaJson = {
     tables: {},
     fields: {},
     tableConstraints: {}
@@ -35,7 +35,7 @@ describe('generate', () => {
 
   it('should generate DBML and reference strings and print to stdout if no output file is specified', () => {
     const mockDbml = 'DBML_CONTENT';
-    const expectedRef = `Ref "infer_fk_ParentTable_ChildTable_ParentColumn":"ParentTable"."ParentColumn" < "ChildTable"."ChildColumn"`;
+    const expectedRef = 'Ref "infer_fk_ParentTable_ChildTable_ParentColumn":"ParentTable"."ParentColumn" < "ChildTable"."ChildColumn"';
 
     // Mock importer.generateDbml
     jest.spyOn(importer, 'generateDbml').mockReturnValue(mockDbml);
@@ -53,7 +53,7 @@ describe('generate', () => {
 
   it('should generate DBML and reference strings and write to a file if output file is specified', () => {
     const mockDbml = 'DBML_CONTENT';
-    const expectedRef = `Ref "infer_fk_ParentTable_ChildTable_ParentColumn":"ParentTable"."ParentColumn" < "ChildTable"."ChildColumn"`;
+    const expectedRef = 'Ref "infer_fk_ParentTable_ChildTable_ParentColumn":"ParentTable"."ParentColumn" < "ChildTable"."ChildColumn"';
     const outFile = 'output.dbml';
 
     // Mock importer.generateDbml

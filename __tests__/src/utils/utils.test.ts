@@ -72,9 +72,9 @@ describe('getCommandOpt', () => {
       inputFile: 'schema.sql',
       verbose: true,
     });
-  
+
     const result = getCommandOpt(mockProgram);
-  
+
     expect(result).toEqual({
       databaseType: 'postgres',
       connection: 'postgres://user:password@localhost:5432/db',
@@ -84,14 +84,14 @@ describe('getCommandOpt', () => {
         verbose: true,
       },
     });
-  
+
     expect(logger.level).toBe('debug');
     expect(logger.debug).toHaveBeenCalledWith('Verbose mode enabled');
     expect(logger.debug).toHaveBeenCalledWith(
       'Database Type: postgres, Connection: postgres://user:password@localhost:5432/db, Options: {"outFile":"output.dbml","inputFile":"schema.sql","verbose":true}'
     );
   });
-  
+
   it('should throw an error if database type or connection is missing', () => {
     mockProgram.args = ['postgres'];
     mockProgram.opts = jest.fn().mockReturnValue(mockOptions);
@@ -151,7 +151,7 @@ describe('matchesWildcardPattern', () => {
   it('should cache regex patterns to optimize performance', () => {
     const pattern = 'order_%date';
     const spy = jest.spyOn(RegExp.prototype, 'test');
-    
+
     matchesWildcardPattern('order_created_date', pattern);
     matchesWildcardPattern('order_date', pattern);
 

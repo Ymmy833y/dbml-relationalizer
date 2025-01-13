@@ -61,7 +61,7 @@ describe('findRelations', () => {
 
     expect(result).toEqual([]);
     expect(logger.warn).toHaveBeenCalledWith(
-      "Invalid format for parentQualifiedColumn: 'users'. Expected 'tableName.columnName'. Skipping relation."
+      'Invalid format for parentQualifiedColumn: \'users\'. Expected \'tableName.columnName\'. Skipping relation.'
     );
   });
 
@@ -77,7 +77,7 @@ describe('findRelations', () => {
 
     expect(result).toEqual([]);
     expect(logger.warn).toHaveBeenCalledWith(
-      "ParentQualifiedColumn does not exist in Database schema: nonexistent_table.id. Skipping relation."
+      'ParentQualifiedColumn does not exist in Database schema: nonexistent_table.id. Skipping relation.'
     );
   });
 
@@ -99,7 +99,7 @@ describe('findRelations', () => {
 
     expect(result).toEqual([]);
     expect(logger.warn).toHaveBeenCalledWith(
-      "Invalid format for childQualifiedColumn: 'orders'. Expected 'tableName.columnName'."
+      'Invalid format for childQualifiedColumn: \'orders\'. Expected \'tableName.columnName\'.'
     );
   });
 
