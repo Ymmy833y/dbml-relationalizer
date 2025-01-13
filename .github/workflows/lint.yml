@@ -1,4 +1,4 @@
-name: test
+name: lint
 
 on:
   push:
@@ -11,7 +11,7 @@ on:
       - release/**
 
 jobs:
-  build:
+  lint:
     runs-on: ubuntu-24.04
     strategy:
       matrix:
@@ -28,8 +28,5 @@ jobs:
     - name: Install dependencies
       run: npm install
 
-    - name: Build packages
-      run: npm run build
-
-    - name: Run tests
-      run: npm test
+    - name: Run lint
+      run: npm run lint
