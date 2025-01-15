@@ -61,7 +61,7 @@ inference:
 - `enabled`: Set to `true` to enable inference  
 - `strategy`:
   - `default`: Uses `pluralize` to get the singular form of table names and looks for `<singularTableName>_<primaryKey>` columns
-  - `identical`: Assumes child columns share the same name as the parent column (e.g., parent `users.user_id` → child `%.id`)
+  - `identical`: Assumes child columns share the same name as the parent column (e.g., parent `users.user_id` → child `%.user_id`)
 
 For instance, if the `users` table has a primary key `id`, the `default` strategy looks for child columns named `user_id`.
 
