@@ -1,6 +1,6 @@
 {
-  "name": "@ymmy833y/dbml-relationalizer",
-  "version": "0.1.0",
+  "name": "@ymmy/dbml-relationalizer",
+  "version": "0.1.1",
   "description": "CLI tool that generates DBML from database and relation definitions",
   "main": "dist/src/index.js",
   "types": "dist/src/types.d.ts",
@@ -20,6 +20,7 @@
   "dependencies": {
     "@dbml/connector": "^3.9.5",
     "@dbml/core": "^3.9.5",
+    "@ymmy/dbml-relationalizer": "file:",
     "commander": "^13.0.0",
     "dotenv": "^16.4.7",
     "pluralize": "^8.0.0",
