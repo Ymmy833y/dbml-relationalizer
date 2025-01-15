@@ -3,7 +3,7 @@ import { join } from 'path';
 import { Command } from 'commander';
 import logger from '../../../src/utils/logger';
 
-import { getVersion, getCommandOpt, splitQualifiedColumn, matchesWildcardPattern } from '../../../src/utils/utils';
+import { getVersion, getCommandOpt, splitQualifiedColumn, matchesWildcardPattern, addUniqueItems } from '../../../src/utils/utils';
 
 jest.mock('fs');
 jest.mock('path');
@@ -169,5 +169,75 @@ describe('matchesWildcardPattern', () => {
   it('should handle patterns without any wildcards', () => {
     expect(matchesWildcardPattern('exact_match', 'exact_match')).toBe(true);
     expect(matchesWildcardPattern('exact_match', 'different_match')).toBe(false);
+  });
+});
+
+describe('addUniqueItems', () => {
+  it('should add unique objects to the original list', () => {
+    const originalList = [
+      { key: 'value1', anotherKey: 'value2' },
+    ];
+    const itemsToAdd = [
+      { key: 'value1', anotherKey: 'value2' }, // duplicate object with different reference
+      { key: 'uniqueKey', anotherKey: 'uniqueValue' }, // unique object
+    ];
+
+    addUniqueItems(originalList, itemsToAdd);
+
+    expect(originalList).toEqual([
+      { key: 'value1', anotherKey: 'value2' },
+      { key: 'uniqueKey', anotherKey: 'uniqueValue' },
+    ]);
+  });
+
+  it('should not add duplicate objects with different references', () => {
+    const originalList = [
+      { key: 'value1', anotherKey: 'value2' },
+    ];
+    const duplicateObject = { key: 'value1', anotherKey: 'value2' }; // Same content, different reference
+
+    addUniqueItems(originalList, [duplicateObject]);
+
+    // Only the first object remains in the list
+    expect(originalList).toEqual([
+      { key: 'value1', anotherKey: 'value2' },
+    ]);
+  });
+
+  it('should handle an empty original list', () => {
+    const originalList: object[] = [];
+    const itemsToAdd = [
+      { key: 'value1', anotherKey: 'value2' },
+      { key: 'uniqueKey', anotherKey: 'uniqueValue' },
+    ];
+
+    addUniqueItems(originalList, itemsToAdd);
+
+    expect(originalList).toEqual([
+      { key: 'value1', anotherKey: 'value2' },
+      { key: 'uniqueKey', anotherKey: 'uniqueValue' },
+    ]);
+  });
+
+  it('should handle an empty itemsToAdd list', () => {
+    const originalList = [
+      { key: 'value1', anotherKey: 'value2' },
+    ];
+    const itemsToAdd: object[] = [];
+
+    addUniqueItems(originalList, itemsToAdd);
+
+    expect(originalList).toEqual([
+      { key: 'value1', anotherKey: 'value2' },
+    ]);
+  });
+
+  it('should handle empty original and itemsToAdd lists', () => {
+    const originalList: object[] = [];
+    const itemsToAdd: object[] = [];
+
+    addUniqueItems(originalList, itemsToAdd);
+
+    expect(originalList).toEqual([]);
   });
 });

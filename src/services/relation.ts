@@ -1,5 +1,5 @@
-import { RelationPattern, Relation, DatabaseSchemaMap } from '../types.js';
-import { splitQualifiedColumn, matchesWildcardPattern } from '../utils/utils.js';
+import { RelationDefinitions, RelationPattern, Relation, DatabaseSchemaMap } from '../types.js';
+import { splitQualifiedColumn, matchesWildcardPattern, addUniqueItems } from '../utils/utils.js';
 import logger from '../utils/logger.js';
 
 /**
@@ -56,19 +56,25 @@ function extractRelationsFromChildQualifiedColumns(
 
 /**
  * Returns whether the Relation is included in the ignore Relation.
- * As a prerequisite, the parent of the Relation and the parent of the ignore Relation must match.
  * @param relation
  * @param ignoreRelations
  * @returns True if it is included in the ignore relation, False if it is not.
  */
 function isIgnoredRelation(relation: Relation, ignoreRelations: Relation[]): boolean {
   return ignoreRelations.some(ignoreRelation =>
+    relation.parentTable === ignoreRelation.parentTable &&
+    relation.parentColumn === ignoreRelation.parentColumn &&
     relation.childTable === ignoreRelation.childTable &&
     relation.childColumn === ignoreRelation.childColumn
   );
 }
 
-function findRelation(schemaMap: DatabaseSchemaMap, relationPattern: RelationPattern): Relation[] {
+function findRelation(
+  schemaMap: DatabaseSchemaMap,
+  relationPattern: RelationPattern,
+  relations: Relation[],
+  ignoreRelations: Relation[]
+) {
   const splitResult = splitQualifiedColumn(relationPattern.parentQualifiedColumn);
   if (!splitResult) {
     logger.warn(`Invalid format for parentQualifiedColumn: '${relationPattern.parentQualifiedColumn}'. Expected 'tableName.columnName'. Skipping relation.`);
@@ -82,19 +88,19 @@ function findRelation(schemaMap: DatabaseSchemaMap, relationPattern: RelationPat
     return [];
   }
 
-  const relations = extractRelationsFromChildQualifiedColumns(
+  addUniqueItems(relations, extractRelationsFromChildQualifiedColumns(
     schemaMap,
-    relationPattern.childQualifiedColumns,
+    relationPattern.childQualifiedColumns || [],
     parentTable,
     parentColumn
-  );
+  ));
 
-  const ignoreRelations = extractRelationsFromChildQualifiedColumns(
+  addUniqueItems(ignoreRelations, extractRelationsFromChildQualifiedColumns(
     schemaMap,
     relationPattern.ignoreChildQualifiedColumns || [],
     parentTable,
     parentColumn
-  );
+  ));
 
   ignoreRelations.push({
     parentTable,
@@ -102,16 +108,27 @@ function findRelation(schemaMap: DatabaseSchemaMap, relationPattern: RelationPat
     childTable: parentTable,
     childColumn: parentColumn
   });
+}
+
+function findRelations(
+  schemaMap: DatabaseSchemaMap,
+  relationDefinitions: RelationDefinitions,
+  inferredRelations: RelationPattern[]
+): Relation[] {
+  const relations: Relation[] = [];
+  const ignoreRelations: Relation[] = [];
+
+  inferredRelations.forEach(relationPattern =>
+    findRelation(schemaMap, relationPattern, relations, ignoreRelations)
+  );
+
+  relationDefinitions.relations?.forEach(relationPattern =>
+    findRelation(schemaMap, relationPattern, relations, ignoreRelations)
+  );
 
   return relations.filter(relation => {
     return !isIgnoredRelation(relation, ignoreRelations);
   });
-}
-
-function findRelations(schemaMap: DatabaseSchemaMap, relationPatterns: RelationPattern[]): Relation[] {
-  return relationPatterns.flatMap(relationPattern =>
-    findRelation(schemaMap, relationPattern)
-  );
 }
 
 export {

@@ -1,3 +1,7 @@
+inference:
+  enabled: true
+  strategy: default
+
 relations:
   - parentQualifiedColumn: "user.id"
     childQualifiedColumns:
