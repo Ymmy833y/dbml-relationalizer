@@ -128,3 +128,12 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+# Ignore package-lock.json for flexibility in dependencies
+package-lock.json
+
+# relation definitions file
+relations.yml
+
+# dbml file
+*.dbml
