@@ -1,4 +1,4 @@
-import { RelationPattern, DatabaseSchemaMap } from '../../../src/types';
+import { RelationDefinitions, RelationPattern, DatabaseSchemaMap } from '../../../src/types';
 import logger from '../../../src/utils/logger';
 
 import { findRelations } from '../../../src/services/relation';
@@ -8,27 +8,46 @@ jest.mock('../../../src/utils/logger');
 describe('findRelations', () => {
   const mockSchemaMap: DatabaseSchemaMap = {
     users: {
-      columns: ['id', 'name', 'email'],
+      columns: ['id', 'name', 'email', 'address'],
       primaryKeys: ['id'],
+      uniqueKeys: ['email'],
     },
     orders: {
       columns: ['id', 'user_id', 'total'],
       primaryKeys: ['id'],
+      uniqueKeys: [],
     },
+    addresses: {
+      columns: ['id', 'address', 'tel'],
+      primaryKeys: ['id'],
+      uniqueKeys: []
+    }
   };
 
-  const mockRelationPatterns: RelationPattern[] = [
-    {
-      parentQualifiedColumn: 'users.id',
-      childQualifiedColumns: ['orders.user_id'],
+  const mockRelationDefinitions: RelationDefinitions = {
+    inference: {
+      enabled: true
     },
-  ];
+    relations: [
+      {
+        parentQualifiedColumn: 'addresses.address',
+        childQualifiedColumns: ['%.address'],
+      },
+    ],
+  };
 
-  const mockRelationPatternsWithIgnore: RelationPattern[] = [
+  const mockInferredRelations: RelationPattern[] = [
     {
       parentQualifiedColumn: 'users.id',
-      childQualifiedColumns: ['orders.user_id'],
-      ignoreChildQualifiedColumns: ['orders.user_id'],
+      childQualifiedColumns: ['%.user_id'],
+    },
+    {
+      parentQualifiedColumn: 'users.email',
+      childQualifiedColumns: ['%.email'],
+    },
+    {
+      parentQualifiedColumn: 'orders.id',
+      childQualifiedColumns: ['%.order_id'],
     },
   ];
 
@@ -36,8 +55,8 @@ describe('findRelations', () => {
     jest.clearAllMocks();
   });
 
-  it('should return relations for valid relation patterns', () => {
-    const result = findRelations(mockSchemaMap, mockRelationPatterns);
+  it('should find relations for valid relation patterns and inferred relations', () => {
+    const result = findRelations(mockSchemaMap, mockRelationDefinitions, mockInferredRelations);
 
     expect(result).toEqual([
       {
@@ -46,18 +65,51 @@ describe('findRelations', () => {
         childTable: 'orders',
         childColumn: 'user_id',
       },
+      {
+        parentTable: 'addresses',
+        parentColumn: 'address',
+        childTable: 'users',
+        childColumn: 'address',
+      },
     ]);
+
+    expect(logger.warn).not.toHaveBeenCalled();
   });
 
-  it('should skip relations for invalid parentQualifiedColumn format', () => {
-    const invalidPatterns: RelationPattern[] = [
-      {
-        parentQualifiedColumn: 'users',
-        childQualifiedColumns: ['orders.user_id'],
+  it('should handle ignoreChildQualifiedColumns correctly', () => {
+    const relationDefinitionsWithIgnore: RelationDefinitions = {
+      inference: {
+        enabled: true
       },
-    ];
+      relations: [
+        {
+          parentQualifiedColumn: 'users.id',
+          ignoreChildQualifiedColumns: ['orders.user_id'],
+        },
+      ],
+    };
 
-    const result = findRelations(mockSchemaMap, invalidPatterns);
+    const result = findRelations(mockSchemaMap, relationDefinitionsWithIgnore, mockInferredRelations);
+
+    expect(result).toEqual([]);
+
+    expect(logger.warn).not.toHaveBeenCalled();
+  });
+
+  it('should log warnings for invalid parentQualifiedColumn format', () => {
+    const invalidDefinitions: RelationDefinitions = {
+      inference: {
+        enabled: true
+      },
+      relations: [
+        {
+          parentQualifiedColumn: 'users', // Invalid format
+          childQualifiedColumns: ['orders.user_id'],
+        },
+      ],
+    };
+
+    const result = findRelations(mockSchemaMap, invalidDefinitions, []);
 
     expect(result).toEqual([]);
     expect(logger.warn).toHaveBeenCalledWith(
@@ -65,15 +117,20 @@ describe('findRelations', () => {
     );
   });
 
-  it('should skip relations when parentQualifiedColumn does not exist in schema', () => {
-    const invalidPatterns: RelationPattern[] = [
-      {
-        parentQualifiedColumn: 'nonexistent_table.id',
-        childQualifiedColumns: ['orders.user_id'],
+  it('should log warnings for non-existent parentQualifiedColumn in schema', () => {
+    const invalidDefinitions: RelationDefinitions = {
+      inference: {
+        enabled: true
       },
-    ];
+      relations: [
+        {
+          parentQualifiedColumn: 'nonexistent_table.id',
+          childQualifiedColumns: ['orders.user_id'],
+        },
+      ],
+    };
 
-    const result = findRelations(mockSchemaMap, invalidPatterns);
+    const result = findRelations(mockSchemaMap, invalidDefinitions, []);
 
     expect(result).toEqual([]);
     expect(logger.warn).toHaveBeenCalledWith(
@@ -81,68 +138,51 @@ describe('findRelations', () => {
     );
   });
 
-  it('should exclude relations based on ignoreChildQualifiedColumns', () => {
-    const result = findRelations(mockSchemaMap, mockRelationPatternsWithIgnore);
+  it('should handle empty relations and inferred relations', () => {
+    const emptyDefinitions: RelationDefinitions = {
+      inference: {
+        enabled: true
+      },
+      relations: []
+    };
+    const result = findRelations(mockSchemaMap, emptyDefinitions, []);
 
     expect(result).toEqual([]);
+    expect(logger.warn).not.toHaveBeenCalled();
   });
 
-  it('should log a warning for invalid childQualifiedColumns', () => {
-    const patternsWithInvalidChild: RelationPattern[] = [
-      {
-        parentQualifiedColumn: 'users.id',
-        childQualifiedColumns: ['orders'], // Invalid format
+  it('should handle schema map with no matching childQualifiedColumns', () => {
+    const unmatchedDefinitions: RelationDefinitions = {
+      inference: {
+        enabled: true
       },
-    ];
+      relations: [
+        {
+          parentQualifiedColumn: 'users.id',
+          childQualifiedColumns: ['nonexistent_table.column'],
+        },
+      ],
+    };
 
-    const result = findRelations(mockSchemaMap, patternsWithInvalidChild);
+    const result = findRelations(mockSchemaMap, unmatchedDefinitions, []);
+
+    expect(result).toEqual([]);
+    expect(logger.warn).not.toHaveBeenCalled();
+  });
+
+  it('should handle schema map with no matching tables or columns', () => {
+    const emptySchemaMap: DatabaseSchemaMap = {};
+    const result = findRelations(emptySchemaMap, mockRelationDefinitions, mockInferredRelations);
 
     expect(result).toEqual([]);
     expect(logger.warn).toHaveBeenCalledWith(
-      'Invalid format for childQualifiedColumn: \'orders\'. Expected \'tableName.columnName\'.'
+      'ParentQualifiedColumn does not exist in Database schema: users.id. Skipping relation.'
     );
-  });
-
-  it('should handle multiple valid relation patterns', () => {
-    const multiplePatterns: RelationPattern[] = [
-      {
-        parentQualifiedColumn: 'users.id',
-        childQualifiedColumns: ['orders.user_id'],
-      },
-      {
-        parentQualifiedColumn: 'orders.id',
-        childQualifiedColumns: ['users.id'],
-      },
-    ];
-
-    const result = findRelations(mockSchemaMap, multiplePatterns);
-
-    expect(result).toEqual([
-      {
-        parentTable: 'users',
-        parentColumn: 'id',
-        childTable: 'orders',
-        childColumn: 'user_id',
-      },
-      {
-        parentTable: 'orders',
-        parentColumn: 'id',
-        childTable: 'users',
-        childColumn: 'id',
-      },
-    ]);
-  });
-
-  it('should return an empty array when no relations are found', () => {
-    const patternsWithoutRelations: RelationPattern[] = [
-      {
-        parentQualifiedColumn: 'users.id',
-        childQualifiedColumns: ['nonexistent_table.column'],
-      },
-    ];
-
-    const result = findRelations(mockSchemaMap, patternsWithoutRelations);
-
-    expect(result).toEqual([]);
+    expect(logger.warn).toHaveBeenCalledWith(
+      'ParentQualifiedColumn does not exist in Database schema: users.email. Skipping relation.'
+    );
+    expect(logger.warn).toHaveBeenCalledWith(
+      'ParentQualifiedColumn does not exist in Database schema: orders.id. Skipping relation.'
+    );
   });
 });

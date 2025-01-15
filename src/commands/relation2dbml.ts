@@ -1,5 +1,5 @@
 import { Command } from 'commander';
-import { loadRelationPattern, fetchSchema, findRelations, generate } from '../services/index.js';
+import { loadRelationDefinitions, fetchSchema, generateInferredRelationPattern, findRelations, generate } from '../services/index.js';
 import { DatabaseSchemaJson, DatabaseSchemaMap } from '../types.js';
 import { getVersion, getCommandOpt } from '../utils/utils.js';
 import logger from '../utils/logger.js';
@@ -11,12 +11,14 @@ export default async function generateDBML(
     logger.info(`Starting relation2dbml script (Version: ${getVersion()})`);
     const { databaseType, connection, options } = getCommandOpt(program);
 
-    const relationPatterns = loadRelationPattern(options.inputFile);
+    const relationDefinitions = loadRelationDefinitions(options.inputFile);
 
     const schemaJson = await fetchSchema(databaseType, connection);
     const schemaMap = convertToSchemaMap(schemaJson);
 
-    const relations = findRelations(schemaMap, relationPatterns);
+    const inferredRelations = generateInferredRelationPattern(schemaMap, relationDefinitions.inference);
+
+    const relations = findRelations(schemaMap, relationDefinitions, inferredRelations);
 
     generate(schemaJson, relations, options.outFile);
     logger.info('DBML generation completed successfully.');
@@ -42,8 +44,11 @@ function convertToSchemaMap(schemaJson: DatabaseSchemaJson): DatabaseSchemaMap {
     const primaryKeys = Object.entries(constraints)
       .filter(([_, constraint]) => constraint.pk)
       .map(([column, _]) => column);
+    const uniqueKeys = Object.entries(constraints)
+      .filter(([_, constraint]) => constraint.unique)
+      .map(([column, _]) => column);
 
-    schemaMap[table] = { columns, primaryKeys };
+    schemaMap[table] = { columns, primaryKeys, uniqueKeys };
   };
   return schemaMap;
 }

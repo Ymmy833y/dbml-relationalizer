@@ -1,106 +1,97 @@
 import fs from 'fs';
 import { parse } from 'yaml';
-import { RelationPattern } from '../../../src/types';
+import { validateInferenceDefinitions, validateRelationPatterns } from '../../../src/utils/validate';
 import logger from '../../../src/utils/logger';
 
-import { loadRelationPattern } from '../../../src/services/import';
+import { loadRelationDefinitions } from '../../../src/services/import';
 
 jest.mock('fs');
 jest.mock('yaml');
+jest.mock('../../../src/utils/validate');
 jest.mock('../../../src/utils/logger');
 
-describe('loadRelationPattern', () => {
-  const validRelationPattern: RelationPattern = {
-    parentQualifiedColumn: 'parent_table.parent_column',
-    childQualifiedColumns: ['child_table.child_column1', 'child_table.child_column2'],
-    ignoreChildQualifiedColumns: ['ignore_child_table.ignore_child_column1'],
+describe('loadRelationDefinitions', () => {
+  const mockFilePath = './mockRelations.yml';
+  const mockParsedData = {
+    inference: { enabled: true, strategy: 'default' },
+    relations: [
+      { parentQualifiedColumn: 'users.id', childQualifiedColumns: ['orders.user_id'] },
+    ],
   };
-
-  const invalidRelationPattern = {
-    parentQualifiedColumn: 'parent_table.parent_column',
-    // Missing `childQualifiedColumns`
-  };
-
-  const defaultFilePath = './relations.yml';
 
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  it('should return a valid array of RelationPattern when file contains valid data', () => {
-    const fileContents = 'mock yaml content';
-    const parsedYaml = {
-      relations: [validRelationPattern],
-    };
+  it('should load and return valid relation definitions', () => {
+    (fs.readFileSync as jest.Mock).mockReturnValue('mock file content');
+    (parse as jest.Mock).mockReturnValue(mockParsedData);
+    (validateInferenceDefinitions as jest.Mock).mockReturnValue(true);
+    (validateRelationPatterns as jest.Mock).mockReturnValue(true);
 
-    jest.spyOn(fs, 'readFileSync').mockReturnValue(fileContents);
-    (parse as jest.Mock).mockReturnValue(parsedYaml);
+    const result = loadRelationDefinitions(mockFilePath);
 
-    const result = loadRelationPattern();
-
-    expect(fs.readFileSync).toHaveBeenCalledWith(defaultFilePath, 'utf8');
-    expect(parse).toHaveBeenCalledWith(fileContents);
-    expect(result).toEqual(parsedYaml.relations);
+    expect(fs.readFileSync).toHaveBeenCalledWith(mockFilePath, 'utf8');
+    expect(parse).toHaveBeenCalledWith('mock file content');
+    expect(validateInferenceDefinitions).toHaveBeenCalledWith(mockParsedData.inference);
+    expect(validateRelationPatterns).toHaveBeenCalledWith(mockParsedData.relations);
     expect(logger.debug).toHaveBeenCalledWith(
-      'Starting to read the relation definition file at path: ./relations.yml'
+      `Starting to read the relation definition file at path: ${mockFilePath}`
     );
-    expect(logger.debug).toHaveBeenCalledWith('All relations are valid.');
+    expect(logger.debug).toHaveBeenCalledWith(
+      `Relation definitions are valid. Relation definitions: ${JSON.stringify(mockParsedData)}`
+    );
+    expect(result).toEqual(mockParsedData);
   });
 
-  it('should throw an error when file contains invalid relation pattern', () => {
-    const fileContents = 'mock yaml content';
-    const parsedYaml = {
-      relations: [validRelationPattern, invalidRelationPattern],
-    };
+  it('should throw an error if inference validation fails', () => {
+    (fs.readFileSync as jest.Mock).mockReturnValue('mock file content');
+    (parse as jest.Mock).mockReturnValue(mockParsedData);
+    (validateInferenceDefinitions as jest.Mock).mockReturnValue(false);
 
-    jest.spyOn(fs, 'readFileSync').mockReturnValue(fileContents);
-    (parse as jest.Mock).mockReturnValue(parsedYaml);
-
-    expect(() => loadRelationPattern()).toThrowError(
-      `Invalid relation pattern format in ${defaultFilePath}.`
+    expect(() => loadRelationDefinitions(mockFilePath)).toThrow(
+      `Invalid relation pattern format in ${mockFilePath}.`
     );
-    expect(fs.readFileSync).toHaveBeenCalledWith(defaultFilePath, 'utf8');
+    expect(fs.readFileSync).toHaveBeenCalledWith(mockFilePath, 'utf8');
+    expect(parse).toHaveBeenCalledWith('mock file content');
+    expect(validateInferenceDefinitions).toHaveBeenCalledWith(mockParsedData.inference);
+    expect(validateRelationPatterns).not.toHaveBeenCalled();
     expect(logger.debug).toHaveBeenCalledWith(
-      'Starting to read the relation definition file at path: ./relations.yml'
-    );
-    expect(logger.debug).toHaveBeenCalledWith(
-      `Relation at index 2 is invalid. relation: ${JSON.stringify(invalidRelationPattern)}`
+      `Starting to read the relation definition file at path: ${mockFilePath}`
     );
   });
 
-  it('should use the provided filePath if specified', () => {
-    const filePath = './custom-relations.yml';
-    const fileContents = 'mock yaml content';
-    const parsedYaml = {
-      relations: [validRelationPattern],
-    };
+  it('should throw an error if relation patterns validation fails', () => {
+    (fs.readFileSync as jest.Mock).mockReturnValue('mock file content');
+    (parse as jest.Mock).mockReturnValue(mockParsedData);
+    (validateInferenceDefinitions as jest.Mock).mockReturnValue(true);
+    (validateRelationPatterns as jest.Mock).mockReturnValue(false);
 
-    jest.spyOn(fs, 'readFileSync').mockReturnValue(fileContents);
-    (parse as jest.Mock).mockReturnValue(parsedYaml);
-
-    const result = loadRelationPattern(filePath);
-
-    expect(fs.readFileSync).toHaveBeenCalledWith(filePath, 'utf8');
-    expect(parse).toHaveBeenCalledWith(fileContents);
-    expect(result).toEqual(parsedYaml.relations);
+    expect(() => loadRelationDefinitions(mockFilePath)).toThrow(
+      `Invalid relation pattern format in ${mockFilePath}.`
+    );
+    expect(fs.readFileSync).toHaveBeenCalledWith(mockFilePath, 'utf8');
+    expect(parse).toHaveBeenCalledWith('mock file content');
+    expect(validateInferenceDefinitions).toHaveBeenCalledWith(mockParsedData.inference);
+    expect(validateRelationPatterns).toHaveBeenCalledWith(mockParsedData.relations);
     expect(logger.debug).toHaveBeenCalledWith(
-      `Starting to read the relation definition file at path: ${filePath}`
+      `Starting to read the relation definition file at path: ${mockFilePath}`
     );
   });
 
-  it('should throw an error if file content is invalid YAML', () => {
-    const fileContents = 'mock yaml content';
-    const parsedYaml = null;
+  it('should throw an error if parsed data is invalid or undefined', () => {
+    (fs.readFileSync as jest.Mock).mockReturnValue('mock file content');
+    (parse as jest.Mock).mockReturnValue(undefined);
 
-    jest.spyOn(fs, 'readFileSync').mockReturnValue(fileContents);
-    (parse as jest.Mock).mockReturnValue(parsedYaml);
-
-    expect(() => loadRelationPattern()).toThrowError(
-      `Invalid relation pattern format in ${defaultFilePath}.`
+    expect(() => loadRelationDefinitions(mockFilePath)).toThrow(
+      `Invalid relation pattern format in ${mockFilePath}.`
     );
-    expect(fs.readFileSync).toHaveBeenCalledWith(defaultFilePath, 'utf8');
+    expect(fs.readFileSync).toHaveBeenCalledWith(mockFilePath, 'utf8');
+    expect(parse).toHaveBeenCalledWith('mock file content');
+    expect(validateInferenceDefinitions).not.toHaveBeenCalled();
+    expect(validateRelationPatterns).not.toHaveBeenCalled();
     expect(logger.debug).toHaveBeenCalledWith(
-      'Starting to read the relation definition file at path: ./relations.yml'
+      `Starting to read the relation definition file at path: ${mockFilePath}`
     );
   });
 });

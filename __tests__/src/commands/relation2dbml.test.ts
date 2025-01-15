@@ -1,59 +1,38 @@
 import { Command } from 'commander';
-import { loadRelationPattern, fetchSchema, findRelations, generate } from '../../../src/services/index';
-import { getVersion, getCommandOpt } from '../../../src/utils/utils';
-import logger from '../../../src/utils/logger';
-
 import generateDBML from '../../../src/commands/relation2dbml';
+import { loadRelationDefinitions, fetchSchema, generateInferredRelationPattern, findRelations, generate } from '../../../src/services/index';
+import logger from '../../../src/utils/logger';
+import { getVersion, getCommandOpt } from '../../../src/utils/utils';
+import { Relation } from '../../../src/types';
 
 jest.mock('../../../src/services/index');
-jest.mock('../../../src/utils/utils');
 jest.mock('../../../src/utils/logger');
+jest.mock('../../../src/utils/utils');
 
 describe('generateDBML', () => {
   const mockProgram = new Command();
+  const mockOptions = { inputFile: 'mockInputFile.yml', outFile: 'mockOutputFile.dbml' };
+  const mockRelationDefinitions = {
+    inference: { enabled: true, strategy: 'default' },
+    relations: [],
+  };
   const mockSchemaJson = {
-    tables: {
-      users: { name: 'users' },
-      orders: { name: 'orders' },
-    },
+    tables: { users: { name: 'users' }, orders: { name: 'orders' } },
     fields: {
       users: [{ name: 'id' }, { name: 'name' }],
       orders: [{ name: 'id' }, { name: 'user_id' }],
     },
     tableConstraints: {
-      users: { id: { pk: true } },
-      orders: { id: { pk: true }, user_id: { fk: true } },
+      users: { id: { pk: true }, email: { unique: true } },
+      orders: { id: { pk: true } },
     },
   };
   const mockSchemaMap = {
-    users: {
-      columns: ['id', 'name'],
-      primaryKeys: ['id'],
-    },
-    orders: {
-      columns: ['id', 'user_id'],
-      primaryKeys: ['id'],
-    },
+    users: { columns: ['id', 'name'], primaryKeys: ['id'], uniqueKeys: ['email'] },
+    orders: { columns: ['id', 'user_id'], primaryKeys: ['id'], uniqueKeys: [] },
   };
-  const mockRelations = [
-    {
-      parentTable: 'users',
-      parentColumn: 'id',
-      childTable: 'orders',
-      childColumn: 'user_id',
-    },
-  ];
-  const mockRelationPatterns = [
-    {
-      parentQualifiedColumn: 'users.id',
-      childQualifiedColumns: ['orders.user_id'],
-    },
-  ];
-  const mockOptions = {
-    inputFile: 'relations.yml',
-    outFile: 'output.dbml',
-    verbose: true,
-  };
+  const mockInferredRelations: Relation[] = [];
+  const mockRelations: Relation[] = [];
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -64,8 +43,9 @@ describe('generateDBML', () => {
       connection: 'postgres://user:password@localhost:5432/db',
       options: mockOptions,
     });
-    (loadRelationPattern as jest.Mock).mockReturnValue(mockRelationPatterns);
+    (loadRelationDefinitions as jest.Mock).mockReturnValue(mockRelationDefinitions);
     (fetchSchema as jest.Mock).mockResolvedValue(mockSchemaJson);
+    (generateInferredRelationPattern as jest.Mock).mockReturnValue(mockInferredRelations);
     (findRelations as jest.Mock).mockReturnValue(mockRelations);
   });
 
@@ -73,10 +53,12 @@ describe('generateDBML', () => {
     await generateDBML(mockProgram);
 
     expect(getVersion).toHaveBeenCalled();
+    expect(logger.info).toHaveBeenCalledWith('Starting relation2dbml script (Version: 1.0.0)');
     expect(getCommandOpt).toHaveBeenCalledWith(mockProgram);
-    expect(loadRelationPattern).toHaveBeenCalledWith(mockOptions.inputFile);
+    expect(loadRelationDefinitions).toHaveBeenCalledWith(mockOptions.inputFile);
     expect(fetchSchema).toHaveBeenCalledWith('postgres', 'postgres://user:password@localhost:5432/db');
-    expect(findRelations).toHaveBeenCalledWith(mockSchemaMap, mockRelationPatterns);
+    expect(generateInferredRelationPattern).toHaveBeenCalledWith(mockSchemaMap, mockRelationDefinitions.inference);
+    expect(findRelations).toHaveBeenCalledWith(mockSchemaMap, mockRelationDefinitions, mockInferredRelations);
     expect(generate).toHaveBeenCalledWith(mockSchemaJson, mockRelations, mockOptions.outFile);
     expect(logger.info).toHaveBeenCalledWith('DBML generation completed successfully.');
   });

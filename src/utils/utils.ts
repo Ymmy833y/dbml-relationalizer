@@ -72,9 +72,33 @@ function matchesWildcardPattern(value: string, pattern: string): boolean {
   return regexCache[pattern].test(value);
 }
 
+/**
+ * Add new elements to the original list while eliminating duplicates
+ * @param originalList
+ * @param itemsToAdd
+ * @param keyFn generates a unique key for each element (optional)
+ */
+function addUniqueItems<T>(
+  originalList: T[],
+  itemsToAdd: T[],
+  keyFn?: (item: T) => string
+): void {
+  const generateKey = keyFn || ((item: T) => JSON.stringify(item));
+  const itemSet = new Set<string>(originalList.map(generateKey));
+
+  itemsToAdd.forEach(item => {
+    const key = generateKey(item);
+    if (!itemSet.has(key)) {
+      itemSet.add(key);
+      originalList.push(item);
+    }
+  });
+}
+
 export {
   getVersion,
   getCommandOpt,
   splitQualifiedColumn,
-  matchesWildcardPattern
+  matchesWildcardPattern,
+  addUniqueItems
 };
