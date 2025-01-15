@@ -1,6 +1,6 @@
-# @ymmy833y/dbml-relationalizer
+# @ymmy/dbml-relationalizer
 
-`@ymmy833y/dbml-relationalizer` is a CLI tool that generates **DBML (Database Markup Language)** representations of table relationships based on **database schema information** and **relationship definition files**.
+`@ymmy/dbml-relationalizer` is a CLI tool that generates **DBML (Database Markup Language)** representations of table relationships based on **database schema information** and **relationship definition files**.
 
 Key Features:
 - Automatically generate DBML by fetching schema information from an existing database  
@@ -12,7 +12,7 @@ Key Features:
 
 ```bash
 # Assuming it's published to the npm registry:
-npm install -g @ymmy833y/dbml-relationalizer
+npm install -g @ymmy/dbml-relationalizer
 
 # Or, clone the repository and install locally:
 git clone https://github.com/Ymmy833y/dbml-relationalizer.git
