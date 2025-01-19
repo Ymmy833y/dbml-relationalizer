@@ -73,7 +73,8 @@ function findRelation(
   schemaMap: DatabaseSchemaMap,
   relationPattern: RelationPattern,
   relations: Relation[],
-  ignoreRelations: Relation[]
+  ignoreRelations: Relation[],
+  ignoreSelfReferences: boolean,
 ) {
   const splitResult = splitQualifiedColumn(relationPattern.parentQualifiedColumn);
   if (!splitResult) {
@@ -102,12 +103,14 @@ function findRelation(
     parentColumn
   ));
 
-  ignoreRelations.push({
-    parentTable,
-    parentColumn,
-    childTable: parentTable,
-    childColumn: parentColumn
-  });
+  if (ignoreSelfReferences) {
+    ignoreRelations.push({
+      parentTable,
+      parentColumn,
+      childTable: parentTable,
+      childColumn: parentColumn
+    });
+  }
 }
 
 function findRelations(
@@ -118,12 +121,19 @@ function findRelations(
   const relations: Relation[] = [];
   const ignoreRelations: Relation[] = [];
 
+  const { ignoreSelfReferences = true } = relationDefinitions;
+  if (ignoreSelfReferences) {
+    logger.debug('Self-referencing relationships will be ignored');
+  } else {
+    logger.debug('Self-referencing relationships will not be ignored');
+  }
+
   inferredRelations.forEach(relationPattern =>
-    findRelation(schemaMap, relationPattern, relations, ignoreRelations)
+    findRelation(schemaMap, relationPattern, relations, ignoreRelations, ignoreSelfReferences)
   );
 
   relationDefinitions.relations?.forEach(relationPattern =>
-    findRelation(schemaMap, relationPattern, relations, ignoreRelations)
+    findRelation(schemaMap, relationPattern, relations, ignoreRelations, ignoreSelfReferences)
   );
 
   return relations.filter(relation => {

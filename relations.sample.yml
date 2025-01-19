@@ -1,6 +1,6 @@
 inference:
   enabled: true
-  strategy: default
+  strategy: default # or identical
 
 relations:
   - parentQualifiedColumn: "user.id"
@@ -12,3 +12,5 @@ relations:
       - "%.items_id"
     ignoreChildQualifiedColumns:
       - "items.%"
+
+ignoreSelfReferences: true

@@ -9,12 +9,12 @@
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
-    "declaration": true
+    "declaration": true,
+    "types": ["vitest/globals"]
   },
   "include": [
     "bin",
     "src",
-    "__tests__"
   ],
   "exclude": [
     "node_modules",

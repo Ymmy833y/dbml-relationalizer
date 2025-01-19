@@ -1,9 +1,11 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+
 import { RelationDefinitions, RelationPattern, DatabaseSchemaMap } from '../../../src/types';
 import logger from '../../../src/utils/logger';
 
 import { findRelations } from '../../../src/services/relation';
 
-jest.mock('../../../src/utils/logger');
+vi.mock('../../../src/utils/logger');
 
 describe('findRelations', () => {
   const mockSchemaMap: DatabaseSchemaMap = {
@@ -52,7 +54,7 @@ describe('findRelations', () => {
   ];
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should find relations for valid relation patterns and inferred relations', () => {
@@ -184,5 +186,52 @@ describe('findRelations', () => {
     expect(logger.warn).toHaveBeenCalledWith(
       'ParentQualifiedColumn does not exist in Database schema: orders.id. Skipping relation.'
     );
+  });
+
+  it('should handle ignoreSelfReferences flag correctly', () => {
+    const mockSchemaMap: DatabaseSchemaMap = {
+      users: {
+        columns: ['user_id', 'name', 'email', 'address'],
+        primaryKeys: ['user_id'],
+        uniqueKeys: ['email'],
+      },
+      orders: {
+        columns: ['order_id', 'user_id', 'total'],
+        primaryKeys: ['order_id'],
+        uniqueKeys: [],
+      },
+    };
+
+    const relationDefinitionsWithSelfReference: RelationDefinitions = {
+      inference: {
+        enabled: false
+      },
+      relations: [
+        {
+          parentQualifiedColumn: 'users.user_id',
+          childQualifiedColumns: ['%.user_id'],
+        },
+      ],
+      ignoreSelfReferences: false, // Allow self-reference
+    };
+
+    const result = findRelations(mockSchemaMap, relationDefinitionsWithSelfReference, []);
+
+    expect(result).toEqual([
+      {
+        parentTable: 'users',
+        parentColumn: 'user_id',
+        childTable: 'users',
+        childColumn: 'user_id',
+      },
+      {
+        parentTable: 'users',
+        parentColumn: 'user_id',
+        childTable: 'orders',
+        childColumn: 'user_id',
+      },
+    ]);
+
+    expect(logger.warn).not.toHaveBeenCalled();
   });
 });

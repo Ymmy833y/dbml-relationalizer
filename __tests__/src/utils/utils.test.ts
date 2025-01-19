@@ -1,27 +1,42 @@
+import { describe, it, expect, vi, beforeEach, Mock } from 'vitest';
+
 import { readFileSync } from 'fs';
-import { join } from 'path';
+import { dirname, resolve } from 'path';
+import { fileURLToPath } from 'url';
 import { Command } from 'commander';
 import logger from '../../../src/utils/logger';
 
 import { getVersion, getCommandOpt, splitQualifiedColumn, matchesWildcardPattern, addUniqueItems } from '../../../src/utils/utils';
 
-jest.mock('fs');
-jest.mock('path');
-jest.mock('../../../src/utils/logger');
-
+vi.mock('fs');
+vi.mock('path');
+vi.mock('url');
+vi.mock('../../../src/utils/logger');
 
 describe('getVersion', () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+  });
+
   it('should return the version from package.json', () => {
     const mockVersion = '1.0.0';
     const mockPackageJsonPath = '/mock/path/package.json';
     const mockPackageJsonContent = JSON.stringify({ version: mockVersion });
+    const mockDirname = '/mock/dirname';
+    const mockFileURLToPath = '/mock/fileURLToPath';
 
-    (join as jest.Mock).mockReturnValue(mockPackageJsonPath);
-    (readFileSync as jest.Mock).mockReturnValue(mockPackageJsonContent);
+    (fileURLToPath as unknown as Mock).mockReturnValue(mockFileURLToPath);
+    (dirname as unknown as Mock).mockReturnValue(mockDirname);
+    (resolve as unknown as Mock).mockReturnValue(mockPackageJsonPath);
+    (readFileSync as unknown as Mock).mockReturnValue(mockPackageJsonContent);
+
+    vi.mocked(fileURLToPath).mockReturnValue(mockFileURLToPath);
 
     const result = getVersion();
 
-    expect(join).toHaveBeenCalledWith(process.cwd(), 'package.json');
+    expect(fileURLToPath).toHaveBeenCalledWith(expect.stringContaining('/src/utils/utils.ts'));
+    expect(dirname).toHaveBeenCalledWith(mockFileURLToPath);
+    expect(resolve).toHaveBeenCalledWith(mockDirname, '../../../package.json');
     expect(readFileSync).toHaveBeenCalledWith(mockPackageJsonPath, 'utf8');
     expect(result).toBe(mockVersion);
   });
@@ -29,12 +44,19 @@ describe('getVersion', () => {
   it('should throw an error if package.json is invalid', () => {
     const mockPackageJsonPath = '/mock/path/package.json';
     const invalidContent = '{ invalid json }';
+    const mockDirname = '/mock/dirname';
+    const mockFileURLToPath = '/mock/fileURLToPath';
 
-    (join as jest.Mock).mockReturnValue(mockPackageJsonPath);
-    (readFileSync as jest.Mock).mockReturnValue(invalidContent);
+    (fileURLToPath as unknown as Mock).mockReturnValue(mockFileURLToPath);
+    (dirname as unknown as Mock).mockReturnValue(mockDirname);
+    (resolve as unknown as Mock).mockReturnValue(mockPackageJsonPath);
+    (readFileSync as unknown as Mock).mockReturnValue(invalidContent);
 
     expect(() => getVersion()).toThrow(SyntaxError);
-    expect(join).toHaveBeenCalledWith(process.cwd(), 'package.json');
+
+    expect(fileURLToPath).toHaveBeenCalledWith(expect.stringContaining('/src/utils/utils.ts'));
+    expect(dirname).toHaveBeenCalledWith(mockFileURLToPath);
+    expect(resolve).toHaveBeenCalledWith(mockDirname, '../../../package.json');
     expect(readFileSync).toHaveBeenCalledWith(mockPackageJsonPath, 'utf8');
   });
 });
@@ -44,12 +66,12 @@ describe('getCommandOpt', () => {
   const mockOptions = { verbose: true };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.resetAllMocks();
   });
 
   it('should return database type, connection, and options', () => {
     mockProgram.args = ['postgres', 'postgres://user:password@localhost:5432/db'];
-    mockProgram.opts = jest.fn().mockReturnValue(mockOptions);
+    mockProgram.opts = vi.fn().mockReturnValue(mockOptions);
 
     const result = getCommandOpt(mockProgram);
 
@@ -67,7 +89,7 @@ describe('getCommandOpt', () => {
 
   it('should correctly parse all command options', () => {
     mockProgram.args = ['postgres', 'postgres://user:password@localhost:5432/db'];
-    mockProgram.opts = jest.fn().mockReturnValue({
+    mockProgram.opts = vi.fn().mockReturnValue({
       outFile: 'output.dbml',
       inputFile: 'schema.sql',
       verbose: true,
@@ -94,7 +116,7 @@ describe('getCommandOpt', () => {
 
   it('should throw an error if database type or connection is missing', () => {
     mockProgram.args = ['postgres'];
-    mockProgram.opts = jest.fn().mockReturnValue(mockOptions);
+    mockProgram.opts = vi.fn().mockReturnValue(mockOptions);
 
     expect(() => getCommandOpt(mockProgram)).toThrow(
       'Database type and connection string are required.'
@@ -150,7 +172,7 @@ describe('matchesWildcardPattern', () => {
 
   it('should cache regex patterns to optimize performance', () => {
     const pattern = 'order_%date';
-    const spy = jest.spyOn(RegExp.prototype, 'test');
+    const spy = vi.spyOn(RegExp.prototype, 'test');
 
     matchesWildcardPattern('order_created_date', pattern);
     matchesWildcardPattern('order_date', pattern);
