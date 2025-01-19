@@ -1,3 +1,5 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+
 import fs from 'fs';
 import { EOL } from 'os';
 import { importer } from '@dbml/core';
@@ -6,11 +8,11 @@ import logger from '../../../src/utils/logger';
 
 import { generate } from '../../../src/services/export';
 
-jest.mock('fs');
-jest.mock('../../../src/utils/logger');
-jest.mock('@dbml/core', () => ({
+vi.mock('fs');
+vi.mock('../../../src/utils/logger');
+vi.mock('@dbml/core', () => ({
   importer: {
-    generateDbml: jest.fn(),
+    generateDbml: vi.fn(),
   },
 }));
 
@@ -30,7 +32,7 @@ describe('generate', () => {
   ];
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should generate DBML and reference strings and print to stdout if no output file is specified', () => {
@@ -38,10 +40,10 @@ describe('generate', () => {
     const expectedRef = 'Ref "infer_fk_ParentTable_ChildTable_ParentColumn":"ParentTable"."ParentColumn" < "ChildTable"."ChildColumn"';
 
     // Mock importer.generateDbml
-    jest.spyOn(importer, 'generateDbml').mockReturnValue(mockDbml);
+    vi.spyOn(importer, 'generateDbml').mockReturnValue(mockDbml);
 
     // Mock console.log
-    const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+    const consoleSpy = vi.spyOn(console, 'log').mockRejectedValue(undefined);
 
     generate(mockSchemaJson, mockRelations);
 
@@ -57,7 +59,7 @@ describe('generate', () => {
     const outFile = 'output.dbml';
 
     // Mock importer.generateDbml
-    jest.spyOn(importer, 'generateDbml').mockReturnValue(mockDbml);
+    vi.spyOn(importer, 'generateDbml').mockReturnValue(mockDbml);
 
     generate(mockSchemaJson, mockRelations, outFile);
 
@@ -68,10 +70,10 @@ describe('generate', () => {
   it('should handle empty relations array', () => {
     const mockDbml = 'DBML_CONTENT';
 
-    jest.spyOn(importer, 'generateDbml').mockReturnValue(mockDbml);
+    vi.spyOn(importer, 'generateDbml').mockReturnValue(mockDbml);
 
     // Mock console.log
-    const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+    const consoleSpy = vi.spyOn(console, 'log').mockRejectedValue(undefined);
 
     generate(mockSchemaJson, []);
 

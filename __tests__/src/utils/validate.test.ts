@@ -1,3 +1,5 @@
+import { describe, it, expect, vi, beforeEach, Mock } from 'vitest';
+
 import { isInferenceDefinitions, isRelationPattern } from '../../../src/types';
 import logger from '../../../src/utils/logger';
 
@@ -7,19 +9,19 @@ import {
   validateRelationPattern,
 } from '../../../src/utils/validate';
 
-jest.mock('../../../src/utils/logger');
-jest.mock('../../../src/types', () => ({
-  isInferenceDefinitions: jest.fn(),
-  isRelationPattern: jest.fn(),
+vi.mock('../../../src/utils/logger');
+vi.mock('../../../src/types', () => ({
+  isInferenceDefinitions: vi.fn(),
+  isRelationPattern: vi.fn(),
 }));
 
 describe('validateInferenceDefinitions', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should return true for valid inference definitions', () => {
-    (isInferenceDefinitions as unknown as jest.Mock).mockReturnValue(true);
+    (isInferenceDefinitions as unknown as Mock).mockReturnValue(true);
 
     const validInference = {
       enabled: true,
@@ -34,7 +36,7 @@ describe('validateInferenceDefinitions', () => {
   });
 
   it('should return false for invalid inference definitions and log a debug message', () => {
-    (isInferenceDefinitions as unknown as jest.Mock).mockReturnValue(false);
+    (isInferenceDefinitions as unknown as Mock).mockReturnValue(false);
 
     const invalidInference = {
       enabled: 'true',
@@ -50,11 +52,11 @@ describe('validateInferenceDefinitions', () => {
 
 describe('validateRelationPattern', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should return true for a valid relation pattern', () => {
-    (isRelationPattern as unknown as jest.Mock).mockReturnValue(true);
+    (isRelationPattern as unknown as Mock).mockReturnValue(true);
 
     const validRelation = {
       parentQualifiedColumn: 'users.id',
@@ -68,7 +70,7 @@ describe('validateRelationPattern', () => {
   });
 
   it('should return false for an invalid relation pattern and log a debug message', () => {
-    (isRelationPattern as unknown as jest.Mock).mockReturnValue(false);
+    (isRelationPattern as unknown as Mock).mockReturnValue(false);
 
     const invalidRelation = { parentQualifiedColumns: 'users' };
 
@@ -84,7 +86,7 @@ describe('validateRelationPattern', () => {
 
 describe('validateRelationsPattern', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should return true for an empty relations array', () => {
@@ -94,7 +96,7 @@ describe('validateRelationsPattern', () => {
   });
 
   it('should return true for a valid relations array', () => {
-    (isRelationPattern as unknown as jest.Mock).mockReturnValue(true);
+    (isRelationPattern as unknown as Mock).mockReturnValue(true);
 
     const validRelations = [
       { parentQualifiedColumn: 'users.id', childQualifiedColumns: ['orders.user_id'] },
@@ -109,7 +111,7 @@ describe('validateRelationsPattern', () => {
   });
 
   it('should return false if any relation in the array is invalid', () => {
-    (isRelationPattern as unknown as jest.Mock).mockImplementation((relation) =>
+    (isRelationPattern as unknown as Mock).mockImplementation((relation) =>
       relation.parentQualifiedColumn === 'users.id'
     );
 

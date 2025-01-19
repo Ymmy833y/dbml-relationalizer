@@ -1,9 +1,11 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+
 import { RelationDefinitions, RelationPattern, DatabaseSchemaMap } from '../../../src/types';
 import logger from '../../../src/utils/logger';
 
 import { findRelations } from '../../../src/services/relation';
 
-jest.mock('../../../src/utils/logger');
+vi.mock('../../../src/utils/logger');
 
 describe('findRelations', () => {
   const mockSchemaMap: DatabaseSchemaMap = {
@@ -52,7 +54,7 @@ describe('findRelations', () => {
   ];
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should find relations for valid relation patterns and inferred relations', () => {

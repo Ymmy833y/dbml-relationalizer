@@ -1,3 +1,5 @@
+import { describe, it, expect, vi, beforeEach, Mock } from 'vitest';
+
 import fs from 'fs';
 import { parse } from 'yaml';
 import { validateInferenceDefinitions, validateRelationPatterns } from '../../../src/utils/validate';
@@ -5,10 +7,10 @@ import logger from '../../../src/utils/logger';
 
 import { loadRelationDefinitions } from '../../../src/services/import';
 
-jest.mock('fs');
-jest.mock('yaml');
-jest.mock('../../../src/utils/validate');
-jest.mock('../../../src/utils/logger');
+vi.mock('fs');
+vi.mock('yaml');
+vi.mock('../../../src/utils/validate');
+vi.mock('../../../src/utils/logger');
 
 describe('loadRelationDefinitions', () => {
   const mockFilePath = './mockRelations.yml';
@@ -20,14 +22,14 @@ describe('loadRelationDefinitions', () => {
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should load and return valid relation definitions', () => {
-    (fs.readFileSync as jest.Mock).mockReturnValue('mock file content');
-    (parse as jest.Mock).mockReturnValue(mockParsedData);
-    (validateInferenceDefinitions as jest.Mock).mockReturnValue(true);
-    (validateRelationPatterns as jest.Mock).mockReturnValue(true);
+    (fs.readFileSync as Mock).mockReturnValue('mock file content');
+    (parse as Mock).mockReturnValue(mockParsedData);
+    (validateInferenceDefinitions as Mock).mockReturnValue(true);
+    (validateRelationPatterns as Mock).mockReturnValue(true);
 
     const result = loadRelationDefinitions(mockFilePath);
 
@@ -45,9 +47,9 @@ describe('loadRelationDefinitions', () => {
   });
 
   it('should throw an error if inference validation fails', () => {
-    (fs.readFileSync as jest.Mock).mockReturnValue('mock file content');
-    (parse as jest.Mock).mockReturnValue(mockParsedData);
-    (validateInferenceDefinitions as jest.Mock).mockReturnValue(false);
+    (fs.readFileSync as Mock).mockReturnValue('mock file content');
+    (parse as Mock).mockReturnValue(mockParsedData);
+    (validateInferenceDefinitions as Mock).mockReturnValue(false);
 
     expect(() => loadRelationDefinitions(mockFilePath)).toThrow(
       `Invalid relation pattern format in ${mockFilePath}.`
@@ -62,10 +64,10 @@ describe('loadRelationDefinitions', () => {
   });
 
   it('should throw an error if relation patterns validation fails', () => {
-    (fs.readFileSync as jest.Mock).mockReturnValue('mock file content');
-    (parse as jest.Mock).mockReturnValue(mockParsedData);
-    (validateInferenceDefinitions as jest.Mock).mockReturnValue(true);
-    (validateRelationPatterns as jest.Mock).mockReturnValue(false);
+    (fs.readFileSync as Mock).mockReturnValue('mock file content');
+    (parse as Mock).mockReturnValue(mockParsedData);
+    (validateInferenceDefinitions as Mock).mockReturnValue(true);
+    (validateRelationPatterns as Mock).mockReturnValue(false);
 
     expect(() => loadRelationDefinitions(mockFilePath)).toThrow(
       `Invalid relation pattern format in ${mockFilePath}.`
@@ -80,8 +82,8 @@ describe('loadRelationDefinitions', () => {
   });
 
   it('should throw an error if parsed data is invalid or undefined', () => {
-    (fs.readFileSync as jest.Mock).mockReturnValue('mock file content');
-    (parse as jest.Mock).mockReturnValue(undefined);
+    (fs.readFileSync as Mock).mockReturnValue('mock file content');
+    (parse as Mock).mockReturnValue(undefined);
 
     expect(() => loadRelationDefinitions(mockFilePath)).toThrow(
       `Invalid relation pattern format in ${mockFilePath}.`

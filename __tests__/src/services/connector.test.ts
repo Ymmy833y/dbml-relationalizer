@@ -1,11 +1,13 @@
+import { describe, it, expect, vi, beforeEach, Mock } from 'vitest';
+
 import { connector } from '@dbml/connector';
 import { DatabaseSchemaJson } from '../../../src/types';
 import logger from '../../../src/utils/logger';
 
 import { fetchSchema } from '../../../src/services/connector';
 
-jest.mock('@dbml/connector');
-jest.mock('../../../src/utils/logger');
+vi.mock('@dbml/connector');
+vi.mock('../../../src/utils/logger');
 
 describe('fetchSchema', () => {
   const mockDatabaseType = 'postgres';
@@ -20,11 +22,11 @@ describe('fetchSchema', () => {
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should fetch the schema and log the number of tables', async () => {
-    (connector.fetchSchemaJson as jest.Mock).mockResolvedValue(mockSchemaJson);
+    (connector.fetchSchemaJson as Mock).mockResolvedValue(mockSchemaJson);
 
     const result = await fetchSchema(mockDatabaseType, mockConnection);
 
@@ -37,7 +39,7 @@ describe('fetchSchema', () => {
   it('should log and rethrow an error if connector.fetchSchemaJson throws an error', async () => {
     const mockError = new Error('Database connection failed');
 
-    (connector.fetchSchemaJson as jest.Mock).mockRejectedValue(mockError);
+    (connector.fetchSchemaJson as Mock).mockRejectedValue(mockError);
 
     await expect(fetchSchema(mockDatabaseType, mockConnection)).rejects.toThrow('Failed to connect to database.');
 
@@ -50,7 +52,7 @@ describe('fetchSchema', () => {
   it('should log a generic error message if the error is not an instance of Error', async () => {
     const mockError = 'Unknown error';
 
-    (connector.fetchSchemaJson as jest.Mock).mockRejectedValue(mockError);
+    (connector.fetchSchemaJson as Mock).mockRejectedValue(mockError);
 
     await expect(fetchSchema(mockDatabaseType, mockConnection)).rejects.toThrow('Failed to connect to database.');
 
