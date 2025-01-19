@@ -2,6 +2,8 @@ inference:
   enabled: true
   strategy: default
 
+ignoreSelfReferences: true
+
 relations:
   - parentQualifiedColumn: "user.id"
     childQualifiedColumns:

@@ -16,6 +16,7 @@ interface RelationPattern {
 interface RelationDefinitions {
   inference: InferenceDefinitions;
   relations?: RelationPattern[];
+  ignoreSelfReferences?: boolean;
 }
 
 interface Relation {
