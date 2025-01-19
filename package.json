@@ -1,15 +1,18 @@
 {
   "name": "@ymmy/dbml-relationalizer",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "CLI tool that generates DBML from database and relation definitions",
   "main": "dist/src/index.js",
   "types": "dist/src/types.d.ts",
   "bin": {
     "relation2dbml": "./dist/bin/relation2dbml.js"
   },
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc",
-    "start": "npm run build && node dist/bin/relation2dbml.js",
+    "dev": "npm run build && node dist/bin/relation2dbml.js",
     "lint": "npx eslint .",
     "lint:fix": "npx eslint . --fix",
     "test": "vitest",
@@ -60,6 +63,10 @@
     "generator"
   ],
   "author": "Ymmy833y",
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
   "bugs": {
     "url": "https://github.com/Ymmy833y/dbml-relationalizer/issues"
   },
