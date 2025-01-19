@@ -1,11 +1,13 @@
+import { describe, it, expect, vi, beforeEach, Mock } from 'vitest';
+
 import pluralize from 'pluralize';
 import { DatabaseSchemaMap, InferenceDefinitions } from '../../../src/types';
 import logger from '../../../src/utils/logger';
 
 import { generateInferredRelationPattern } from '../../../src/services/inference';
 
-jest.mock('../../../src/utils/logger');
-jest.mock('pluralize');
+vi.mock('../../../src/utils/logger');
+vi.mock('pluralize');
 
 describe('generateInferredRelationPattern', () => {
   const mockInferenceEnabled: InferenceDefinitions = {
@@ -17,8 +19,8 @@ describe('generateInferredRelationPattern', () => {
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    (pluralize.singular as jest.Mock).mockImplementation((word) => word.slice(0, -1));
+    vi.clearAllMocks();
+    (pluralize.singular as Mock).mockImplementation((word) => word.slice(0, -1));
   });
 
   it('should generate inferred relation patterns with default strategy', () => {
