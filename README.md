@@ -11,13 +11,13 @@ Key Features:
 
 ## Installation
 
-### Assuming it's published to the npm registry:
+### From npm (recommended)
 
 ```bash
 npm install -g @ymmy/dbml-relationalizer
 ```
 
-### Or, clone the repository and install locally:
+### Or, clone the repository and install locally
 
 ```bash
 git clone https://github.com/Ymmy833y/dbml-relationalizer.git
@@ -101,8 +101,6 @@ inference:
   - `default`: Uses `pluralize` to get the singular form of table names and looks for `<singularTableName>_<primaryKey>` columns (e.g., for `users.id`, look for `user_id`).  
   - `identical`: Assumes child columns share the same name as the parent column (e.g., if the parent is `users.user_id`, the child is also `%.user_id`).  
 
-For instance, if the `users` table has a primary key named `id`, the `default` strategy looks for child columns named `user_id`.
-
 ### Defining Relationships Manually
 
 Within the relations block, you can define relationships manually:
@@ -111,7 +109,6 @@ Within the relations block, you can define relationships manually:
 - `childQualifiedColumns` (Optional): Specifies the child table’s columns (% wildcard supported).
 - `ignoreChildQualifiedColumns` (Optional): Specifies any child columns to exclude (% wildcard supported).
 
-All of these properties allow the use of the `%` wildcard to match multiple tables or columns.  
 When entering values, please use the **`tableName.columnName`** format.
 
 #### Wildcard Examples
