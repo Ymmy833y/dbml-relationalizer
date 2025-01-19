@@ -10,11 +10,15 @@ Key Features:
 
 ## Installation
 
-```bash
-# Assuming it's published to the npm registry:
-npm install -g @ymmy/dbml-relationalizer
+### Assuming it's published to the npm registry:
 
-# Or, clone the repository and install locally:
+```bash
+npm install -g @ymmy/dbml-relationalizer
+```
+
+### Or, clone the repository and install locally:
+
+```bash
 git clone https://github.com/Ymmy833y/dbml-relationalizer.git
 cd dbml-relationalizer
 npm install
@@ -28,13 +32,24 @@ After installation, you can use the `relation2dbml` command in your terminal/com
 
 ## Usage
 
-The basic usage is `relation2dbml <database-type> <connection> [options]`.  
+Follow the steps below to generate DBML from a database schema and a custom relationship definition file:
+
+### 1. Create a `relations.yml` file
+
+Refer to [relations.sample.yml](https://github.com/Ymmy833y/dbml-relationalizer/blob/master/relations.sample.yml) for an example (see [Relationship Definition File](#relationship-definition-file-relationsyml) for more details on how to write your own definitions).
+
+### 2. Run the CLI command
+
 For example:
 ```bash
-relation2dbml mysql "mysql://user:pass@localhost:3306/dbname" -o schema.dbml
+relation2dbml mysql mysql://user:pass@localhost:3306/dbname -o schema.dbml
 ```
+This connects to the specified MySQL database and processes the schema information along with any relationships defined in `relations.yml`.
 
-This connects to the specified database, retrieves the schema information, and generates a DBML file.
+### 3. Check the output
+
+- If you specify an output file (e.g., `-o schema.dbml`), the resulting DBML is saved to that file.
+- If you do not specify an output file, the DBML is printed to `stdout` (the console).
 
 ---
 
@@ -94,29 +109,6 @@ relations:
 - `ignoreChildQualifiedColumns`: A list of columns to ignore. Useful for excluding certain automatically inferred relationships  
 
 Using this file, the tool will generate DBML relationships from both user-defined and inferred logic.
-
----
-
-## Sample Commands
-
-### 1. No Inference, Only User-defined Relationships
-
-```bash
-# Example: Connect to MySQL, read relations.yml, and write the DBML to schema.dbml
-relation2dbml mysql "mysql://dbml:dbml@localhost:3309/dbml" \
-  -o schema.dbml -i relations.yml
-```
-
-If you want to disable inference, set `inference.enabled: false` in `relations.yml`.
-
-### 2. With Inference, Print to stdout
-
-```bash
-relation2dbml mysql "mysql://dbml:dbml@localhost:3309/dbml" \
-  -i relations.yml --verbose
-```
-
-In this example, if `inference.enabled: true` is present in `relations.yml`, the tool will infer relationships based on primary or unique keys. The `--verbose` flag will produce additional debug logs, and the final DBML is printed to stdout.
 
 ---
 
