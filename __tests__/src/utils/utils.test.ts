@@ -1,7 +1,8 @@
 import { describe, it, expect, vi, beforeEach, Mock } from 'vitest';
 
 import { readFileSync } from 'fs';
-import { join } from 'path';
+import { dirname, resolve } from 'path';
+import { fileURLToPath } from 'url';
 import { Command } from 'commander';
 import logger from '../../../src/utils/logger';
 
@@ -9,20 +10,33 @@ import { getVersion, getCommandOpt, splitQualifiedColumn, matchesWildcardPattern
 
 vi.mock('fs');
 vi.mock('path');
+vi.mock('url');
 vi.mock('../../../src/utils/logger');
 
 describe('getVersion', () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+  });
+
   it('should return the version from package.json', () => {
     const mockVersion = '1.0.0';
     const mockPackageJsonPath = '/mock/path/package.json';
     const mockPackageJsonContent = JSON.stringify({ version: mockVersion });
+    const mockDirname = '/mock/dirname';
+    const mockFileURLToPath = '/mock/fileURLToPath';
 
-    (join as Mock).mockReturnValue(mockPackageJsonPath);
-    (readFileSync as Mock).mockReturnValue(mockPackageJsonContent);
+    (fileURLToPath as unknown as Mock).mockReturnValue(mockFileURLToPath);
+    (dirname as unknown as Mock).mockReturnValue(mockDirname);
+    (resolve as unknown as Mock).mockReturnValue(mockPackageJsonPath);
+    (readFileSync as unknown as Mock).mockReturnValue(mockPackageJsonContent);
+
+    vi.mocked(fileURLToPath).mockReturnValue(mockFileURLToPath);
 
     const result = getVersion();
 
-    expect(join).toHaveBeenCalledWith(process.cwd(), 'package.json');
+    expect(fileURLToPath).toHaveBeenCalledWith(expect.stringContaining('/src/utils/utils.ts'));
+    expect(dirname).toHaveBeenCalledWith(mockFileURLToPath);
+    expect(resolve).toHaveBeenCalledWith(mockDirname, '../../../package.json');
     expect(readFileSync).toHaveBeenCalledWith(mockPackageJsonPath, 'utf8');
     expect(result).toBe(mockVersion);
   });
@@ -30,12 +44,19 @@ describe('getVersion', () => {
   it('should throw an error if package.json is invalid', () => {
     const mockPackageJsonPath = '/mock/path/package.json';
     const invalidContent = '{ invalid json }';
+    const mockDirname = '/mock/dirname';
+    const mockFileURLToPath = '/mock/fileURLToPath';
 
-    (join as Mock).mockReturnValue(mockPackageJsonPath);
-    (readFileSync as Mock).mockReturnValue(invalidContent);
+    (fileURLToPath as unknown as Mock).mockReturnValue(mockFileURLToPath);
+    (dirname as unknown as Mock).mockReturnValue(mockDirname);
+    (resolve as unknown as Mock).mockReturnValue(mockPackageJsonPath);
+    (readFileSync as unknown as Mock).mockReturnValue(invalidContent);
 
     expect(() => getVersion()).toThrow(SyntaxError);
-    expect(join).toHaveBeenCalledWith(process.cwd(), 'package.json');
+
+    expect(fileURLToPath).toHaveBeenCalledWith(expect.stringContaining('/src/utils/utils.ts'));
+    expect(dirname).toHaveBeenCalledWith(mockFileURLToPath);
+    expect(resolve).toHaveBeenCalledWith(mockDirname, '../../../package.json');
     expect(readFileSync).toHaveBeenCalledWith(mockPackageJsonPath, 'utf8');
   });
 });

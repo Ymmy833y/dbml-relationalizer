@@ -1,5 +1,6 @@
 import { readFileSync } from 'fs';
-import { join } from 'path';
+import { dirname, resolve } from 'path';
+import { fileURLToPath } from 'url';
 import { Command } from 'commander';
 import { CommandOptions } from '../types.js';
 import logger from './logger.js';
@@ -7,8 +8,9 @@ import logger from './logger.js';
 const regexCache: Record<string, RegExp> = {};
 
 function getVersion(): string {
-  const packageJsonPath = join(process.cwd(), 'package.json');
-  const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf8'));
+  const __dirname = dirname(fileURLToPath(import.meta.url));
+  const packagePath = resolve(__dirname, '../../../package.json');
+  const packageJson = JSON.parse(readFileSync(packagePath, 'utf8'));
   return packageJson.version;
 }
 
