@@ -59,6 +59,7 @@
   "author": "Ymmy833y",
   "license": "MIT",
   "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
     "access": "public"
   },
   "bugs": {
