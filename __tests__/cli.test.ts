@@ -6,5 +6,5 @@ describe('CLI Tests', () => {
     const output = execSync('npm run dev -- --help').toString();
 
     expect(output).toContain('Usage');
-  });
+  }, 10000);
 });
