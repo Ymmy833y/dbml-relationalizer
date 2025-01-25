@@ -1,6 +1,6 @@
 {
   "name": "@ymmy/dbml-relationalizer",
-  "version": "0.2.0",
+  "version": "1.0.0",
   "description": "CLI tool that generates DBML from database and relation definitions",
   "main": "dist/src/index.js",
   "types": "dist/src/types.d.ts",
@@ -22,22 +22,16 @@
   "dependencies": {
     "@dbml/connector": "^3.9.5",
     "@dbml/core": "^3.9.5",
-    "@ymmy/dbml-relationalizer": "file:",
     "commander": "^13.0.0",
-    "dotenv": "^16.4.7",
     "pluralize": "^8.0.0",
     "winston": "^3.17.0",
     "yaml": "^2.7.0"
   },
   "devDependencies": {
-    "@eslint/js": "^9.18.0",
     "@types/commander": "^2.12.0",
     "@types/node": "^20.17.12",
     "@types/pluralize": "^0.0.33",
-    "@typescript-eslint/eslint-plugin": "^8.19.1",
-    "@typescript-eslint/parser": "^8.19.1",
     "@vitest/coverage-istanbul": "^3.0.2",
-    "eslint": "^9.18.0",
     "typescript": "^5.0.0",
     "typescript-eslint": "^8.20.0",
     "vitest": "^3.0.2"
@@ -65,6 +59,7 @@
   "author": "Ymmy833y",
   "license": "MIT",
   "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
     "access": "public"
   },
   "bugs": {
